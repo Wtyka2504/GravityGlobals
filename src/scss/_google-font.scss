@@ -1,0 +1,93 @@
+@use "sass:list";
+@use "sass:map";
+$weightsMap: (
+  thin: 100,
+  thinitalic: 100,
+  light: 300,
+  lightitalic: 300,
+  regular: 400,
+  regularitalic: 400,
+  medium: 500,
+  mediumitalic: 500,
+  bold: 700,
+  bolditalic: 700,
+  black: 900,
+  blackitalic: 900,
+);
+@mixin font-face($path, $family, $weight, $style, $format) {
+  @font-face {
+    font-family: $family;
+    font-style: $style;
+    font-weight: $weight;
+    src: url($path) format($format);
+  }
+}
+@function fontFace($paths) {
+  $list: ();
+  @each $path in $paths {
+    $style: fontWeight($path);
+    @if str-index($style, $substring: "italic") {
+      $style: "italic";
+    } @else {
+      $style: "normal";
+    }
+    $list: append(
+      $list,
+      (
+        path: $path,
+        family: fontFamily($path),
+        weight: map-get($weightsMap, fontWeight($path)),
+        style: $style,
+        format: fontFormat($path),
+      )
+    );
+  }
+  @return $list;
+}
+@function fontWeight($string) {
+  $string: to-lower-case($string);
+  $split: str-split($string, "/");
+  $string: nth($split, length($split));
+  $split: str-split($string, "-");
+  $string: nth($split, 2);
+  $split: str-split($string, ".");
+  @return nth($split, 1);
+}
+@function fontFamily($string) {
+  $split: str-split($string, "/");
+  $string: nth($split, length($split));
+  $split: str-split($string, "-");
+  $string: nth($split, 1);
+  @return $string;
+}
+@function fontFormat($string) {
+  $string: to-lower-case($string);
+  $split: str-split($string, "/");
+  $string: nth($split, length($split));
+  $split: str-split($string, ".");
+  $string: nth($split, length($split));
+  @if $string == "ttf" {
+    @return "truetype";
+  } @else if $string == "otf" {
+    @return "opentype";
+  } @else if $string == "woff" {
+    @return "woff";
+  } @else if $string == "woff2" {
+    @return "woff2";
+  } @else {
+    @warn "format #{$string} not found in #{$string}";
+    @return $string;
+  }
+}
+@function str-split($string, $separator) {
+  $split-arr: ();
+  $index: str-index($string, $separator);
+  @while $index != null {
+    $item: str-slice($string, 1, $index - 1);
+    $split-arr: append($split-arr, $item);
+    $string: str-slice($string, $index + 1);
+    $index: str-index($string, $separator);
+  }
+  $split-arr: append($split-arr, $string);
+  @return $split-arr;
+}
